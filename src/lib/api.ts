@@ -141,6 +141,41 @@ export async function getOrgAdmins(organizationId: number): Promise<OrgAdminData
 // SUBSCRIPTIONS
 // ============================
 
+/** La API puede devolver features como lista de claves activas o como mapa booleano. */
+export type PlanFeaturesPayload = string[] | Record<string, boolean>;
+
+const PLAN_FEATURE_KEYS = [
+  "routines",
+  "nutrition",
+  "progress",
+  "payments",
+  "multiCoach",
+] as const;
+
+const DEFAULT_PLAN_FEATURES: Record<string, boolean> = {
+  routines: true,
+  nutrition: true,
+  progress: true,
+  payments: true,
+};
+
+/** Normaliza `features` del plan a un mapa para formularios y UI. */
+export function planFeaturesToRecord(
+  features: PlanFeaturesPayload | null | undefined,
+): Record<string, boolean> {
+  if (features == null) {
+    return { ...DEFAULT_PLAN_FEATURES };
+  }
+  if (Array.isArray(features)) {
+    const out: Record<string, boolean> = {};
+    for (const key of PLAN_FEATURE_KEYS) {
+      out[key] = features.includes(key);
+    }
+    return out;
+  }
+  return { ...DEFAULT_PLAN_FEATURES, ...features };
+}
+
 export interface SubscriptionPlanData {
   id: number;
   name: string;
@@ -153,7 +188,7 @@ export interface SubscriptionPlanData {
   durationDays: number | null;
   isActive: boolean;
   description: string;
-  features: string[];
+  features: PlanFeaturesPayload;
 }
 
 export interface SubscriptionData {

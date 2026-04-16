@@ -18,6 +18,7 @@ import {
   createPlan,
   updatePlan,
   seedPlans,
+  planFeaturesToRecord,
   type SubscriptionPlanData,
 } from "@/lib/api";
 import { toast } from "sonner";
@@ -92,9 +93,7 @@ export default function PlansPage() {
       priceArs: String(plan.priceArs),
       durationDays: plan.durationDays !== null ? String(plan.durationDays) : "",
       description: plan.description || "",
-      features: (typeof plan.features === "object" && plan.features !== null
-        ? plan.features
-        : { routines: true, nutrition: true, progress: true, payments: true }) as Record<string, boolean>,
+      features: planFeaturesToRecord(plan.features),
     });
     setShowModal(true);
   };
@@ -214,10 +213,7 @@ export default function PlansPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {plans.map((plan) => {
-            const features =
-              typeof plan.features === "object" && plan.features !== null
-                ? (plan.features as Record<string, boolean>)
-                : {};
+            const features = planFeaturesToRecord(plan.features);
             return (
               <div
                 key={plan.id}
