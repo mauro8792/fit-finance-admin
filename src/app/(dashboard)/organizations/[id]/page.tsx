@@ -234,38 +234,68 @@ export default function OrganizationDetailPage() {
           <h2 className="text-sm font-semibold text-text">PWA & Logo</h2>
         </div>
 
-        {/* Logo preview */}
-        <div className="flex items-center gap-4">
-          {(org as any).logoUrl ? (
-            <div className="flex items-center gap-4">
-              <div className="bg-[#0a0a0f] rounded-xl p-3 border border-border">
-                <img
-                  src={(org as any).logoUrl}
-                  alt={org.name}
-                  className="h-16 w-16 object-contain"
-                />
-              </div>
-              {(org as any).logoLightUrl && (
-                <div className="bg-white rounded-xl p-3 border border-border">
-                  <img
-                    src={(org as any).logoLightUrl}
-                    alt={`${org.name} (light)`}
-                    className="h-16 w-16 object-contain"
-                  />
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 xl:gap-8">
+          {/* Logos marca */}
+          <div className="xl:col-span-5 space-y-2 min-w-0">
+            <p className="text-xs font-medium text-text-muted">Logos marca</p>
+            <div className="flex flex-wrap items-center gap-4">
+              {org.logoUrl ? (
+                <>
+                  <div className="bg-[#0a0a0f] rounded-xl p-3 border border-border shrink-0">
+                    <img
+                      src={org.logoUrl}
+                      alt={org.name}
+                      className="h-16 w-16 object-contain"
+                    />
+                  </div>
+                  {org.logoLightUrl && (
+                    <div className="bg-white rounded-xl p-3 border border-border shrink-0">
+                      <img
+                        src={org.logoLightUrl}
+                        alt={`${org.name} (claro)`}
+                        className="h-16 w-16 object-contain"
+                      />
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-bg border border-border">
+                  <div
+                    className="w-12 h-12 rounded-lg flex items-center justify-center text-white text-lg font-bold shrink-0"
+                    style={{ backgroundColor: org.primaryColor || "#6366f1" }}
+                  >
+                    {org.name.charAt(0).toUpperCase()}
+                  </div>
+                  <p className="text-xs text-text-dim">
+                    Sin logo — se usa la inicial
+                  </p>
                 </div>
               )}
             </div>
-          ) : (
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-bg border border-border">
-              <div
-                className="w-12 h-12 rounded-lg flex items-center justify-center text-white text-lg font-bold"
-                style={{ backgroundColor: org.primaryColor || "#6366f1" }}
-              >
-                {org.name.charAt(0).toUpperCase()}
+          </div>
+
+          {/* Imagen solo para pantalla de login */}
+          <div className="xl:col-span-7 space-y-2 min-w-0">
+            <p className="text-xs font-medium text-text-muted">
+              Imagen pantalla de login{" "}
+              <span className="text-text-dim font-normal">(/auth/login)</span>
+            </p>
+            {org.loginImageUrl ? (
+              <div className="rounded-xl border border-border bg-[#0a0a0f] p-4 flex items-center justify-center">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={org.loginImageUrl}
+                  alt={`${org.name} — login`}
+                  className="max-h-28 w-full max-w-lg object-contain"
+                />
               </div>
-              <p className="text-xs text-text-dim">Sin logo — se usa la inicial</p>
-            </div>
-          )}
+            ) : (
+              <p className="text-xs text-text-dim leading-relaxed">
+                No hay imagen específica: en el login se muestra el logo principal
+                (o la inicial si no hay logo).
+              </p>
+            )}
+          </div>
         </div>
 
         {/* URLs */}

@@ -55,6 +55,9 @@ export async function checkAuthStatus() {
 // ORGANIZATIONS
 // ============================
 
+/** Escala del logo/imagen en la pantalla de login (PWA); alineado con `fit-finance` / `fit-finance-ui-3`. */
+export type LoginHeroScale = "compact" | "default" | "comfortable";
+
 export interface OrganizationData {
   id: number;
   name: string;
@@ -66,6 +69,10 @@ export interface OrganizationData {
   /** PWA install icons (Cloudinary/CDN), también en `tenant.branding` */
   icon192?: string;
   icon512?: string;
+  /** Solo pantalla de login (`fit-finance-ui-3`); prioridad sobre logo en /auth/login */
+  loginImageUrl?: string;
+  /** Tamaño visual del hero en login (no reemplaza un archivo bien recortado). */
+  loginHeroScale?: LoginHeroScale;
   primaryColor?: string;
   accentColor?: string;
   backgroundColor?: string;
@@ -101,6 +108,28 @@ export async function updateOrganization(
   dto: Partial<OrganizationData>
 ): Promise<OrganizationData> {
   const { data } = await api.patch(`/organizations/${id}`, dto);
+  return data;
+}
+
+/** Solo `tenant.branding` (logos, PWA, login hero, footer, contacto en JSON). */
+export async function patchOrganizationBranding(
+  id: number,
+  dto: Partial<
+    Pick<
+      OrganizationData,
+      | "logoUrl"
+      | "logoLightUrl"
+      | "icon192"
+      | "icon512"
+      | "loginImageUrl"
+      | "loginHeroScale"
+      | "footerText"
+      | "contactEmail"
+      | "contactPhone"
+    >
+  >
+): Promise<OrganizationData> {
+  const { data } = await api.patch(`/organizations/${id}/branding`, dto);
   return data;
 }
 

@@ -6,12 +6,15 @@ import { ArrowLeft, Building2, Save, Loader2, ImageIcon } from "lucide-react";
 import Link from "next/link";
 import {
   getOrganization,
+  patchOrganizationBranding,
   updateOrganization,
+  type LoginHeroScale,
   type OrganizationData,
 } from "@/lib/api";
 import { toast } from "sonner";
 import ImageUploader from "@/components/ui/ImageUploader";
 import PwaIconGuide from "@/components/ui/PwaIconGuide";
+import { LoginScreenPreview } from "@/components/organizations/LoginScreenPreview";
 
 export default function EditOrganizationPage() {
   const { id } = useParams<{ id: string }>();
@@ -30,6 +33,8 @@ export default function EditOrganizationPage() {
     logoLightUrl: "",
     icon192: "",
     icon512: "",
+    loginImageUrl: "",
+    loginHeroScale: "default" as LoginHeroScale,
     isActive: true,
   });
 
@@ -48,6 +53,9 @@ export default function EditOrganizationPage() {
           logoLightUrl: org.logoLightUrl || "",
           icon192: org.icon192 || "",
           icon512: org.icon512 || "",
+          loginImageUrl: org.loginImageUrl || "",
+          loginHeroScale:
+            (org.loginHeroScale as LoginHeroScale | undefined) || "default",
           isActive: org.isActive,
         });
       } catch {
@@ -76,6 +84,9 @@ export default function EditOrganizationPage() {
         name: form.name,
         slug: form.slug,
         type: form.type,
+        isActive: form.isActive,
+      });
+      await patchOrganizationBranding(Number(id), {
         contactEmail: form.contactEmail || undefined,
         contactPhone: form.contactPhone || undefined,
         footerText: form.footerText,
@@ -83,7 +94,11 @@ export default function EditOrganizationPage() {
         logoLightUrl: form.logoLightUrl || undefined,
         icon192: form.icon192 || undefined,
         icon512: form.icon512 || undefined,
-        isActive: form.isActive,
+        loginImageUrl:
+          form.loginImageUrl.trim() === ""
+            ? ""
+            : form.loginImageUrl.trim() || undefined,
+        loginHeroScale: form.loginHeroScale,
       });
       toast.success("Organización actualizada");
       router.push(`/organizations/${id}`);
@@ -104,7 +119,7 @@ export default function EditOrganizationPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="w-full max-w-7xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3">
         <Link
@@ -120,6 +135,9 @@ export default function EditOrganizationPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 xl:gap-8 items-start">
+          {/* Columna principal */}
+          <div className="xl:col-span-7 space-y-6 min-w-0">
         {/* Datos generales */}
         <div className="bg-surface rounded-xl border border-border p-5 space-y-4">
           <div className="flex items-center gap-2 mb-2">
@@ -293,36 +311,79 @@ export default function EditOrganizationPage() {
               className="w-full px-3 py-2 rounded-lg bg-bg border border-border text-sm text-text placeholder:text-text-dim"
             />
           </div>
+        </div>
+          </div>
 
-          {/* Preview */}
-          <div className="mt-4 p-4 rounded-lg border border-border-light bg-[#0a0a0f]">
-            <p className="text-xs text-text-dim mb-2">Vista previa:</p>
-            <div className="flex items-center gap-3">
-              {form.logoUrl ? (
-                <img
-                  src={form.logoUrl}
-                  alt={form.name}
-                  className="h-10 w-auto object-contain"
-                />
-              ) : (
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold bg-primary">
-                  {form.name ? form.name.charAt(0).toUpperCase() : "?"}
-                </div>
-              )}
-              <div>
-                <p className="text-sm font-bold text-primary">
-                  {form.name || "Nombre"}
-                </p>
-                <p className="text-[10px] text-accent">
-                  {form.slug || "slug"}
+          {/* Columna lateral: login (preview) */}
+          <div className="xl:col-span-5 min-w-0">
+            <div className="xl:sticky xl:top-6 space-y-4 bg-surface rounded-xl border border-border p-5">
+              <div className="flex items-center gap-2">
+                <ImageIcon className="w-4 h-4 text-primary shrink-0" />
+                <h2 className="text-sm font-semibold text-text">
+                  Pantalla de login
+                </h2>
+              </div>
+              <p className="text-[11px] text-text-dim">
+                Opcional. Si subís un archivo, es el que verán arriba del
+                formulario en <span className="text-text-muted">/auth/login</span>
+                . Si no, se usa el logo principal.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!form.logoUrl) {
+                    toast.error("Subí primero el logo principal");
+                    return;
+                  }
+                  handleChange("loginImageUrl", form.logoUrl);
+                  toast.success("Imagen de login alineada con el logo principal");
+                }}
+                className="w-full sm:w-auto text-xs px-3 py-1.5 rounded-lg border border-border text-text-muted hover:text-text hover:bg-bg transition-colors"
+              >
+                Usar logo principal
+              </button>
+              <ImageUploader
+                label="Archivo (PNG, JPG o WEBP; puede ser rectangular)"
+                currentUrl={form.loginImageUrl}
+                onUploaded={(url) => handleChange("loginImageUrl", url)}
+                folder={`fit-finance/organizations/${form.slug || "default"}/login`}
+                variant="dark"
+                requireSquare={false}
+                minSize={0}
+              />
+              <div className="space-y-1.5">
+                <label className="text-xs text-text-muted font-medium">
+                  Tamaño en pantalla de login
+                </label>
+                <select
+                  value={form.loginHeroScale}
+                  onChange={(e) =>
+                    handleChange("loginHeroScale", e.target.value)
+                  }
+                  className="w-full px-3 py-2 rounded-lg bg-bg border border-border text-sm text-text"
+                >
+                  <option value="compact">Compacto — menos alto (logos muy grandes)</option>
+                  <option value="default">Normal — recomendado</option>
+                  <option value="comfortable">Cómodo — un poco más grande</option>
+                </select>
+                <p className="text-[10px] text-text-dim leading-snug">
+                  Recomendación para el archivo: ancho máx. ~800px, PNG o WebP con
+                  fondo transparente; el recorte importa más que los píxeles exactos.
                 </p>
               </div>
+              <LoginScreenPreview
+                orgName={form.name}
+                logoUrl={form.logoUrl}
+                loginImageUrl={form.loginImageUrl}
+                loginHeroScale={form.loginHeroScale}
+                footerText={form.footerText}
+              />
             </div>
           </div>
         </div>
 
         {/* Submit */}
-        <div className="flex justify-end gap-3">
+        <div className="flex justify-end gap-3 pt-2 border-t border-border xl:border-0 xl:pt-0">
           <Link
             href={`/organizations/${id}`}
             className="px-4 py-2.5 rounded-lg border border-border text-sm text-text-muted hover:text-text hover:bg-surface transition-colors"
