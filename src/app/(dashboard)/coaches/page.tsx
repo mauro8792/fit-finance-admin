@@ -2,14 +2,16 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Plus, Eye, Edit, Power, Users, Dumbbell } from "lucide-react";
-import { getCoaches, getOrganizations, toggleCoachActive, type CoachData, type OrganizationData } from "@/lib/api";
+import { Plus, Eye, Edit, Power, Users, Dumbbell, Trash2, Loader2 } from "lucide-react";
+import { getCoaches, getOrganizations, toggleCoachActive, deleteCoach, type CoachData, type OrganizationData } from "@/lib/api";
 import { toast } from "sonner";
 
 export default function CoachesPage() {
   const [coaches, setCoaches] = useState<CoachData[]>([]);
   const [orgs, setOrgs] = useState<OrganizationData[]>([]);
   const [loading, setLoading] = useState(true);
+  /** Coach en proceso de borrado (API + refresco de lista). */
+  const [deletingCoachId, setDeletingCoachId] = useState<number | null>(null);
 
   const load = async () => {
     try {
@@ -43,6 +45,26 @@ export default function CoachesPage() {
     }
   };
 
+  const handleDeleteCoach = async (coach: CoachData) => {
+    const ok = window.confirm(
+      `¿Eliminar definitivamente a ${coach.user.fullName} (${coach.user.email})?\n\nSe borrarán el usuario, el perfil de coach y sus alumnos/cuotas asociados. No se puede deshacer.`,
+    );
+    if (!ok) return;
+    setDeletingCoachId(coach.id);
+    try {
+      await deleteCoach(coach.id);
+      await load();
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { message?: string | string[] } } })?.response?.data
+          ?.message;
+      const text = Array.isArray(msg) ? msg[0] : msg || "Error al eliminar coach";
+      toast.error(text);
+    } finally {
+      setDeletingCoachId(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-[60vh]">
@@ -52,7 +74,24 @@ export default function CoachesPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="relative space-y-6">
+      {deletingCoachId !== null && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-background/75 backdrop-blur-[2px]"
+          role="status"
+          aria-live="polite"
+          aria-busy="true"
+        >
+          <div className="flex flex-col items-center gap-3 rounded-xl border border-border bg-surface px-10 py-8 shadow-xl">
+            <Loader2 className="h-9 w-9 animate-spin text-primary" aria-hidden />
+            <p className="text-sm font-medium text-text">Eliminando coach…</p>
+            <p className="text-xs text-text-dim text-center max-w-[240px]">
+              Esto puede tardar unos segundos si tenía alumnos o datos vinculados.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -175,6 +214,19 @@ export default function CoachesPage() {
                           title={coach.isActive ? "Desactivar" : "Activar"}
                         >
                           <Power className="w-4 h-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteCoach(coach)}
+                          disabled={deletingCoachId !== null}
+                          className="p-1.5 rounded-md text-text-dim hover:text-error hover:bg-error/10 transition-colors disabled:pointer-events-none disabled:opacity-40"
+                          title="Eliminar definitivamente"
+                        >
+                          {deletingCoachId === coach.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin text-primary" aria-hidden />
+                          ) : (
+                            <Trash2 className="w-4 h-4" />
+                          )}
                         </button>
                       </div>
                     </td>

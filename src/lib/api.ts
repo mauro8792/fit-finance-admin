@@ -377,6 +377,8 @@ export interface CreateCompleteCoachData {
   fullName: string;
   organizationId?: number;
   sportIds?: number[];
+  /** Coach con perfil de alumno: misma cuenta puede usar la app como estudiante */
+  createPersonalProfile?: boolean;
   specialization?: string;
   experience?: string;
   certification?: string;
@@ -412,6 +414,11 @@ export async function updateCoach(
 export async function toggleCoachActive(id: number): Promise<CoachData> {
   const { data } = await api.patch(`/coaches/${id}/toggle-active`);
   return data;
+}
+
+/** Borra coach, usuario y datos ligados (irreversible). Libera el email. */
+export async function deleteCoach(id: number): Promise<void> {
+  await api.delete(`/coaches/${id}`);
 }
 
 export async function getSports(): Promise<{ id: number; name: string }[]> {

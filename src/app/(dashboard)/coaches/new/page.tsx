@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Save, Loader2 } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Users } from "lucide-react";
 import {
   createCompleteCoach,
   getOrganizations,
@@ -25,6 +25,8 @@ export default function NewCoachPage() {
     organizationId: "",
     sportIds: [] as number[],
     specialization: "",
+    /** Misma API que el PWA: perfil Student vinculado al coach (cuenta híbrida) */
+    createPersonalProfile: false,
   });
 
   useEffect(() => {
@@ -62,6 +64,7 @@ export default function NewCoachPage() {
         fullName: form.fullName,
         organizationId: form.organizationId ? Number(form.organizationId) : undefined,
         sportIds: form.sportIds.length > 0 ? form.sportIds : undefined,
+        createPersonalProfile: form.createPersonalProfile,
         specialization: form.specialization || undefined,
       });
       toast.success("Coach creado exitosamente");
@@ -189,6 +192,35 @@ export default function NewCoachPage() {
             </div>
           </div>
         )}
+
+        {/* Cuenta híbrida: coach + alumno */}
+        <div className="bg-surface rounded-xl border border-border p-5 space-y-3">
+          <h2 className="text-sm font-semibold text-text flex items-center gap-2">
+            <Users className="w-4 h-4" />
+            Cuenta híbrida (opcional)
+          </h2>
+          <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-border/80 bg-bg/40 p-3 transition-colors hover:border-border">
+            <input
+              type="checkbox"
+              role="switch"
+              checked={form.createPersonalProfile}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, createPersonalProfile: e.target.checked }))
+              }
+              className="mt-0.5 h-4 w-4 shrink-0 rounded border-border text-primary focus:ring-primary focus:ring-offset-0"
+            />
+            <span className="min-w-0 space-y-1">
+              <span className="block text-sm font-medium text-text">
+                También puede usar la app como alumno
+              </span>
+              <span className="block text-xs text-text-dim leading-relaxed">
+                Se crea un perfil de entrenamiento vinculado a la misma cuenta (útil para pruebas o
+                coaches que entrenan en el gimnasio). Si marcás deportes arriba, se usa el primero
+                como deporte por defecto del alumno.
+              </span>
+            </span>
+          </label>
+        </div>
 
         {/* Info adicional */}
         <div className="bg-surface rounded-xl border border-border p-5 space-y-4">
